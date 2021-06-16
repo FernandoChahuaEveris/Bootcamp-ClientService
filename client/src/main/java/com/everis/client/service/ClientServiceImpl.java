@@ -4,6 +4,7 @@ import com.everis.client.dao.entity.Client;
 import com.everis.client.dao.repository.ClientRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -35,8 +36,12 @@ public class ClientServiceImpl implements ClientService{
 
     @Override
     public Mono<Client> updateClient(UUID id, Client client) {
+
         log.info("client " + client.getName());
+        log.info("id client " + client.getIdClient());
         return clientRepository.findById(id)
+                .filter(element -> element.getIdClient().equals(client.getIdClient()))
+                .switchIfEmpty(Mono.empty())
                 .map(e -> client)
                 .flatMap(e -> clientRepository.save(e));
     }
@@ -44,13 +49,10 @@ public class ClientServiceImpl implements ClientService{
     @Override
     public Mono<Client> findById(UUID id) {
         log.info("idRequest "+ id);
-        Mono<Client> client = clientRepository.findById(id);
-        client.doOnNext(element -> {
-            element.getIdClient();
+        return clientRepository.findById(id).doOnNext(element -> {
+            log.info("Se encontro registro " + element.getName());
         })
         .switchIfEmpty(Mono.error(new Exception("No se encontro")));
-        //log.info("object "+ );
-        return null;
     }
 
     @Override
