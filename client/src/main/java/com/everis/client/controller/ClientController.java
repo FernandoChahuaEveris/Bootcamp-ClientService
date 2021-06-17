@@ -38,7 +38,8 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
-    public Mono<Client> findById(@PathVariable("id") UUID id){
-        return clientService.findById(id);
+    public Mono<ResponseEntity<Client>> findById(@PathVariable("id") UUID id){
+        Mono<Client> clientMono = clientService.findById(id);
+        return clientMono.map(client -> ResponseEntity.ok(client)).defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
