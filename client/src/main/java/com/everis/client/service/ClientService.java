@@ -1,6 +1,7 @@
 package com.everis.client.service;
 
 import com.everis.client.dao.entity.Client;
+import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -14,7 +15,7 @@ public interface ClientService {
 
     public Mono<Client> updateClient(UUID id, Client client);
 
-    public Mono<Client> findById(UUID id);
+    public Mono<ResponseEntity> findById(UUID id);
 
     public Mono<Client> deleteClient(UUID id);
 }

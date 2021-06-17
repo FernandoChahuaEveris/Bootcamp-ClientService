@@ -1,8 +1,12 @@
 package com.everis.client.controller;
 
 import com.everis.client.dao.entity.Client;
+import com.everis.client.dao.entity.ErrorResponse;
+import com.everis.client.exception.ClientExceptionHandler;
+import com.everis.client.exception.NotFoundException;
 import com.everis.client.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -18,6 +22,7 @@ public class ClientController {
     ClientService clientService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Mono<Client> createClient(@RequestBody Client client){
         return clientService.createClient(client);
     }
@@ -33,13 +38,13 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.ACCEPTED)
     public Mono<Client> deleteClientById(@PathVariable("id") UUID id){
         return clientService.deleteClient(id);
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Client>> findById(@PathVariable("id") UUID id){
-        Mono<Client> clientMono = clientService.findById(id);
-        return clientMono.map(client -> ResponseEntity.ok(client)).defaultIfEmpty(ResponseEntity.notFound().build());
+    public Mono<ResponseEntity> findById(@PathVariable("id") UUID id){
+        return clientService.findById(id);
     }
 }

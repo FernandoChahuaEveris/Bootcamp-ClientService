@@ -1,9 +1,11 @@
 package com.everis.client.service;
 
 import com.everis.client.dao.entity.Client;
+import com.everis.client.dao.entity.ErrorResponse;
 import com.everis.client.dao.repository.ClientRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -47,14 +49,15 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Mono<Client> findById(UUID id) {
+    public Mono<ResponseEntity> findById(UUID id) {
         log.info("idRequest " + id);
         return clientRepository
                 .findById(id)
-                .filter(client -> {
-                    log.info("id cliente "+client.getIdClient());
-                    return client.getIdClient().equals(id);
-                });
+                .map(client -> {
+                    return ResponseEntity.ok(client);
+                })
+                .cast(ResponseEntity.class)
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(HttpStatus.NOT_FOUND, "No se encontro")));
     }
 
     @Override

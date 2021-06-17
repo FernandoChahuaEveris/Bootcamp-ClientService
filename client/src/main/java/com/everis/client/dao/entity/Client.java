@@ -12,7 +12,7 @@ import java.util.UUID;
 @Document
 @AllArgsConstructor
 @NoArgsConstructor
-public class Client {
+public class Client extends DataResponse{
     @Id
     private UUID idClient;
     private String name;
