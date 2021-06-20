@@ -11,7 +11,8 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientEnterprise extends DataResponse{
+public class ClientEnterprise extends DataResponse {
+
     private String typeClient;
     private String businessName;
     private String ruc;

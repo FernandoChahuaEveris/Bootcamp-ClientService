@@ -10,45 +10,55 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Slf4j
 @Service
-public class ClientPersonalServiceImpl implements ClientPersonalService {
+public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPersonal> {
 
     @Autowired
     ClientPersonalRepository<ClientPersonal> clientPersonalRepository;
 
 
     @Override
-    public Mono createClient(ClientPersonal clientPersonal) {
+    public Mono<ClientPersonal> createClient(ClientPersonal clientPersonal) {
+        String id = UUID.randomUUID().toString();
         return Mono.just(clientPersonal)
-                .map(e -> {
-                    e.setIdClient(UUID.randomUUID());
-                    return e;
+                .map(personal -> {
+                    personal.setIdClient(UUID.fromString(id));
+                    personal.setTypeClient("Personal");
+                    personal.setCreationDate(new Date());
+                    return personal;
                 })
-                .flatMap(e -> clientPersonalRepository.save(e));
+                .flatMap(personal -> clientPersonalRepository.save(personal));
     }
 
     @Override
-    public Flux findAll() {
+    public Flux<ClientPersonal> findAll() {
         return clientPersonalRepository.findAll();
     }
 
     @Override
-    public Mono updateClient(UUID id, ClientPersonal clientPersonal) {
+    public Mono<ClientPersonal> updateClient(UUID id, ClientPersonal clientPersonal) {
 
         log.info("client " + clientPersonal.getName());
-        log.info("id client " + clientPersonal.getIdClient());
+        //log.info("id client " + clientPersonal.getIdClient());
         return clientPersonalRepository.findById(id)
-                .filter(element -> element.getIdClient().equals(clientPersonal.getIdClient()))
-                .switchIfEmpty(Mono.error(new Exception("No se encontro")))
-                .map(e -> clientPersonal)
-                .flatMap(e -> clientPersonalRepository.save(e));
+                .filter(personal ->
+                     id.equals(personal.getIdClient())
+                )
+                .flatMap(personal -> {
+                    personal.setDni(clientPersonal.getDni() != null? clientPersonal.getDni() : personal.getDni());
+                    personal.setName(clientPersonal.getName() != null? clientPersonal.getName() : personal.getName());
+                    personal.setLastName(clientPersonal.getLastName() != null? clientPersonal.getLastName() : personal.getLastName());
+                    return clientPersonalRepository.save(personal);
+                })
+                .switchIfEmpty(Mono.just(new ErrorResponse(HttpStatus.NOT_FOUND, "No se encontro")));
     }
 
     @Override
-    public Mono findById(UUID id) {
+    public Mono<ClientPersonal> findById(UUID id) {
         log.info("idRequest " + id);
         return clientPersonalRepository
                 .findById(id)
@@ -61,7 +71,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService {
     }
 
     @Override
-    public Mono deleteClient(UUID id) {
+    public Mono<ClientPersonal> deleteClient(UUID id) {
         return clientPersonalRepository.findById(id)
                 .flatMap(p ->
                         clientPersonalRepository.deleteById(id).thenReturn(p)

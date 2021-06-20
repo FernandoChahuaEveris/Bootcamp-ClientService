@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/client")
+@RequestMapping("/client/personal")
 public class ClientPersonalController {
 
     @Autowired
@@ -20,8 +20,8 @@ public class ClientPersonalController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<ClientPersonal> createClient(@RequestBody ClientPersonal clientPersonal){
-        return clientPersonalService.createClient(clientPersonal);
+    public Mono<ResponseEntity> createClient(@RequestBody ClientPersonal clientPersonal){
+        return clientPersonalService.createClient(clientPersonal).map(ResponseEntity::ok);
     }
 
     @GetMapping
@@ -30,8 +30,8 @@ public class ClientPersonalController {
     }
 
     @PutMapping("/{id}")
-    public Mono<ClientPersonal> updateClient(@PathVariable("id") UUID id, @RequestBody ClientPersonal clientPersonal){
-        return clientPersonalService.updateClient(id, clientPersonal);
+    public Mono<ResponseEntity> updateClient(@PathVariable("id") UUID id, @RequestBody ClientPersonal clientPersonal){
+        return clientPersonalService.updateClient(id, clientPersonal).map(ResponseEntity::ok);
     }
 
     @DeleteMapping("/{id}")
