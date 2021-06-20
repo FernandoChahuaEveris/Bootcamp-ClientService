@@ -6,12 +6,14 @@ import com.everis.client.dao.entity.personal.PersonalError;
 import com.everis.client.dao.repository.enterprise.ClientEnterpriseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Date;
 import java.util.UUID;
 
+@Service
 public class ClientEnterpriseServiceImpl implements ClientEnterpriseService<ClientEnterprise>{
 
     @Autowired

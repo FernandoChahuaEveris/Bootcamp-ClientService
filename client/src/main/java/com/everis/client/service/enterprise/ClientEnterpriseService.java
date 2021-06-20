@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface ClientEnterpriseService<T extends ClientEnterprise> {
 
-    public Mono<T> createClient(ClientEnterprise clientPersonal);
+    public Mono<T> createClient(ClientEnterprise clientEnterprise);
 
     public Flux<T> findAll();
 
