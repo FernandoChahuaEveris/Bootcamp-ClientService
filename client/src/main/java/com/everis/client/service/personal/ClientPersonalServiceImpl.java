@@ -1,7 +1,7 @@
 package com.everis.client.service.personal;
 
-import com.everis.client.dao.entity.ClientPersonal;
-import com.everis.client.dao.entity.ErrorResponse;
+import com.everis.client.dao.entity.personal.ClientPersonal;
+import com.everis.client.dao.entity.personal.PersonalError;
 import com.everis.client.dao.repository.personal.ClientPersonalRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPersonal> {
 
     @Autowired
-    ClientPersonalRepository<ClientPersonal> clientPersonalRepository;
+    ClientPersonalRepository<ClientPersonal> repository;
 
 
     @Override
@@ -31,12 +31,12 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
                     personal.setCreationDate(new Date());
                     return personal;
                 })
-                .flatMap(personal -> clientPersonalRepository.save(personal));
+                .flatMap(personal -> repository.save(personal));
     }
 
     @Override
     public Flux<ClientPersonal> findAll() {
-        return clientPersonalRepository.findAll();
+        return repository.findAll();
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
         log.info("client " + clientPersonal.getName());
         //log.info("id client " + clientPersonal.getIdClient());
-        return clientPersonalRepository.findById(id)
+        return repository.findById(id)
                 .filter(personal ->
                      id.equals(personal.getIdClient())
                 )
@@ -52,29 +52,26 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
                     personal.setDni(clientPersonal.getDni() != null? clientPersonal.getDni() : personal.getDni());
                     personal.setName(clientPersonal.getName() != null? clientPersonal.getName() : personal.getName());
                     personal.setLastName(clientPersonal.getLastName() != null? clientPersonal.getLastName() : personal.getLastName());
-                    return clientPersonalRepository.save(personal);
+                    return repository.save(personal);
                 })
-                .switchIfEmpty(Mono.just(new ErrorResponse(HttpStatus.NOT_FOUND, "No se encontro")));
+                .switchIfEmpty(Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se encontro")));
     }
 
     @Override
     public Mono<ClientPersonal> findById(UUID id) {
         log.info("idRequest " + id);
-        return clientPersonalRepository
+        return repository
                 .findById(id)
                 .switchIfEmpty(
-                        Mono.just(new ErrorResponse(HttpStatus.NOT_FOUND, "No se encontro registro"))
+                        Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se encontro registro"))
                 );
-                /*.map(ResponseEntity::ok)
-                .cast(ResponseEntity.class)
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(HttpStatus.NOT_FOUND, "No se encontro")));*/
     }
 
     @Override
     public Mono<ClientPersonal> deleteClient(UUID id) {
-        return clientPersonalRepository.findById(id)
+        return repository.findById(id)
                 .flatMap(p ->
-                        clientPersonalRepository.deleteById(id).thenReturn(p)
+                        repository.deleteById(id).thenReturn(p)
                 );
     }
 

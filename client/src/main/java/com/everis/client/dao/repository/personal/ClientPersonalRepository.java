@@ -1,6 +1,6 @@
 package com.everis.client.dao.repository.personal;
 
-import com.everis.client.dao.entity.ClientPersonal;
+import com.everis.client.dao.entity.personal.ClientPersonal;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
 

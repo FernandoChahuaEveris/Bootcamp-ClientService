@@ -1,5 +1,6 @@
-package com.everis.client.dao.entity;
+package com.everis.client.dao.entity.personal;
 
+import com.everis.client.dao.entity.DataResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientPersonal extends DataResponse{
+public class ClientPersonal extends DataResponse {
     @Id
     private UUID idClient;
     private String name;

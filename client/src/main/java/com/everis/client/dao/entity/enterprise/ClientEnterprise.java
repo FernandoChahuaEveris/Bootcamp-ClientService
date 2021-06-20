@@ -1,5 +1,6 @@
-package com.everis.client.dao.entity;
+package com.everis.client.dao.entity.enterprise;
 
+import com.everis.client.dao.entity.DataResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,6 @@
 package com.everis.client.service.personal;
 
-import com.everis.client.dao.entity.ClientPersonal;
+import com.everis.client.dao.entity.personal.ClientPersonal;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

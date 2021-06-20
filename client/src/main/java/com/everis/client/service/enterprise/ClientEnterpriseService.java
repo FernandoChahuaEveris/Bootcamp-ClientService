@@ -1,7 +1,6 @@
 package com.everis.client.service.enterprise;
 
-import com.everis.client.dao.entity.ClientEnterprise;
-import com.everis.client.dao.entity.ClientPersonal;
+import com.everis.client.dao.entity.enterprise.ClientEnterprise;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,7 +12,7 @@ public interface ClientEnterpriseService<T extends ClientEnterprise> {
 
     public Flux<T> findAll();
 
-    public Mono<T> updateClient(UUID id, ClientEnterprise clientPersonal);
+    public Mono<T> updateClient(UUID id, ClientEnterprise clientEnterprise);
 
     public Mono<T> findById(UUID id);
 

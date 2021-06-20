@@ -1,6 +1,6 @@
 package com.everis.client.controller;
 
-import com.everis.client.dao.entity.ClientPersonal;
+import com.everis.client.dao.entity.personal.ClientPersonal;
 import com.everis.client.service.personal.ClientPersonalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,7 +42,12 @@ public class ClientPersonalController {
 
     @GetMapping("/{id}")
     public Mono<ResponseEntity> findById(@PathVariable("id") UUID id){
-        return clientPersonalService.findById(id)
-                .map(ResponseEntity::ok);
+        return clientPersonalService.findById(id).map(clientPersonal -> {
+                if(clientPersonal.getClass() == ClientPersonal.class){
+                    return ResponseEntity.status(HttpStatus.OK).body(clientPersonal);
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(clientPersonal);
+                }
+        });
     }
 }
