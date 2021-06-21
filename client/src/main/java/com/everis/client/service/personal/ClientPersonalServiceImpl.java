@@ -75,4 +75,12 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
                 );
     }
 
+    @Override
+    public Mono<ClientPersonal> findClientByDni(String dni) {
+        log.info("dni "+ dni);
+        return repository.findClientByDni(dni)
+                .filter(clientPersonal -> dni.equals(clientPersonal.getDni()))
+                .switchIfEmpty(Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se encontro cliente")));
+    }
+
 }
