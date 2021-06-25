@@ -3,6 +3,7 @@ package com.everis.client.service.personal;
 import com.everis.client.dao.entity.personal.ClientPersonal;
 import com.everis.client.dao.entity.personal.PersonalError;
 import com.everis.client.dao.repository.personal.ClientPersonalRepository;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,8 +36,13 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
     }
 
     @Override
+    @HystrixCommand(fallbackMethod = "findAllDefault")
     public Flux<ClientPersonal> findAll() {
         return repository.findAll();
+    }
+
+    public Flux<ClientPersonal> findAllDefault(){
+        return Flux.empty();
     }
 
     @Override
@@ -58,6 +64,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
     }
 
     @Override
+    @HystrixCommand(fallbackMethod = "findAllDefault")
     public Mono<ClientPersonal> findById(UUID id) {
         log.info("idRequest " + id);
         return repository
