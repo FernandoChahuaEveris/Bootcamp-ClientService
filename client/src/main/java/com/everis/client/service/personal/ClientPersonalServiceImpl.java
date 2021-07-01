@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
 
@@ -38,7 +39,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
     @Override
     @HystrixCommand(fallbackMethod = "findAllDefault")
     public Flux<ClientPersonal> findAll() {
-        return repository.findAll();
+        return repository.findAll().delayElements(Duration.ofSeconds(20));
     }
 
     public Flux<ClientPersonal> findAllDefault(){
