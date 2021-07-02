@@ -17,4 +17,8 @@ public interface ClientEnterpriseService<T extends ClientEnterprise> {
     public Mono<T> findById(UUID id);
 
     public Mono<T> deleteClient(UUID id);
+
+    public Mono<T> assignClientPyme(String ruc);
+
+    public Mono<T> findClientByRuc(String ruc);
 }

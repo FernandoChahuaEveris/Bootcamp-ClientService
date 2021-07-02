@@ -19,4 +19,6 @@ public interface ClientPersonalService<T extends ClientPersonal> {
     public Mono<T> deleteClient(UUID id);
 
     public Mono<T> findClientByDni(String dni);
+
+    public Mono<T> assignClientVip(String dni);
 }

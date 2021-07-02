@@ -14,10 +14,11 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ClientEnterprise extends DataResponse {
 
+    @Id
+    private UUID idClient;
     private String typeClient;
     private String businessName;
     private String ruc;
     private Date creationDate;
-    @Id
-    private UUID idClient;
+    private String profile;
 }

@@ -1,5 +1,7 @@
 package com.everis.client.service.personal;
 
+import com.everis.client.dao.entity.CreditCard;
+import com.everis.client.dao.entity.cusexceptions.NotFoundException;
 import com.everis.client.dao.entity.personal.ClientPersonal;
 import com.everis.client.dao.entity.personal.PersonalError;
 import com.everis.client.dao.repository.personal.ClientPersonalRepository;
@@ -8,12 +10,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 @Slf4j
 @Service
@@ -21,28 +25,34 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
     @Autowired
     ClientPersonalRepository<ClientPersonal> repository;
+    @Autowired
+    private WebClient.Builder builder;
+
+    private Mono<ClientPersonal> mono;
+    boolean isExist;
 
 
     @Override
-    public Mono<ClientPersonal> createClient(ClientPersonal clientPersonal) {
+    public Mono<ClientPersonal> createClient(ClientPersonal client) {
         String id = UUID.randomUUID().toString();
-        return Mono.just(clientPersonal)
-                .map(personal -> {
-                    personal.setIdClient(UUID.fromString(id));
-                    personal.setTypeClient("Personal");
-                    personal.setCreationDate(new Date());
-                    return personal;
-                })
-                .flatMap(personal -> repository.save(personal));
+
+        return findClientByDni(client.getDni()).doOnNext(clientPersonal -> {
+            isExist = true;
+        }).switchIfEmpty(Mono.just(client).flatMap(clientPersonal -> {
+            clientPersonal.setIdClient(UUID.fromString(id));
+            clientPersonal.setTypeClient("Personal");
+            clientPersonal.setCreationDate(new Date());
+            return repository.save(clientPersonal);
+        }));
     }
 
     @Override
     @HystrixCommand(fallbackMethod = "findAllDefault")
     public Flux<ClientPersonal> findAll() {
-        return repository.findAll().delayElements(Duration.ofSeconds(20));
+        return repository.findAll();
     }
 
-    public Flux<ClientPersonal> findAllDefault(){
+    public Flux<ClientPersonal> findAllDefault() {
         return Flux.empty();
     }
 
@@ -53,12 +63,12 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
         //log.info("id client " + clientPersonal.getIdClient());
         return repository.findById(id)
                 .filter(personal ->
-                     id.equals(personal.getIdClient())
+                        id.equals(personal.getIdClient())
                 )
                 .flatMap(personal -> {
-                    personal.setDni(clientPersonal.getDni() != null? clientPersonal.getDni() : personal.getDni());
-                    personal.setName(clientPersonal.getName() != null? clientPersonal.getName() : personal.getName());
-                    personal.setLastName(clientPersonal.getLastName() != null? clientPersonal.getLastName() : personal.getLastName());
+                    personal.setDni(clientPersonal.getDni() != null ? clientPersonal.getDni() : personal.getDni());
+                    personal.setName(clientPersonal.getName() != null ? clientPersonal.getName() : personal.getName());
+                    personal.setLastName(clientPersonal.getLastName() != null ? clientPersonal.getLastName() : personal.getLastName());
                     return repository.save(personal);
                 })
                 .switchIfEmpty(Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se encontro")));
@@ -85,10 +95,34 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
     @Override
     public Mono<ClientPersonal> findClientByDni(String dni) {
-        log.info("dni "+ dni);
-        return repository.findClientByDni(dni)
-                .filter(clientPersonal -> dni.equals(clientPersonal.getDni()))
-                .switchIfEmpty(Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se encontro cliente")));
+        log.info("dni " + dni);
+        return repository
+                .findClientByDni(dni).filter(clientPersonal -> dni.equals(clientPersonal.getDni()))
+                .doOnError(throwable -> new NotFoundException("No se encontro", throwable));
+    }
+
+    @Override
+    public Mono<ClientPersonal> assignClientVip(String dni) {
+        boolean isValid = false;
+
+        Mono<ClientPersonal> monoClient = findClientByDni(dni);
+        Mono<CreditCard> monoCreditCard = builder.build()
+                .get()
+                .uri("docker-credit-cards-service:8085/creditcard/")
+                .retrieve()
+                .bodyToMono(CreditCard.class);
+
+        monoCreditCard.doOnNext(creditCard -> {
+            System.out.println("Validar si es apto para crear perfil VIP");
+        });
+        monoClient.filter(clientPersonal -> !dni.equals(clientPersonal.getDni()))
+                .onErrorResume(throwable -> Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se puede encontrar cliente")));
+
+        return repository.findById(monoClient.block().getIdClient())
+                .flatMap(clientPersonal -> {
+                    clientPersonal.setProfile("VIP");
+                    return repository.save(clientPersonal);
+                });
     }
 
 }

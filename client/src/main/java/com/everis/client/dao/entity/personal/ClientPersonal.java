@@ -24,4 +24,6 @@ public class ClientPersonal extends DataResponse {
     private String dni;
     private Date creationDate;
     private String typeClient;
+    private String profile;
+
 }
