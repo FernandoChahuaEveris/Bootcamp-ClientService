@@ -64,7 +64,6 @@ public class ClientPersonalController {
     }
 
     @PostMapping("/vip/{dni}")
-    @ResponseStatus(HttpStatus.ACCEPTED)
     public Mono<ResponseEntity> assignVip(@PathVariable("dni")String dni){
         return service.assignClientVip(dni).map(ResponseEntity::ok);
     }
