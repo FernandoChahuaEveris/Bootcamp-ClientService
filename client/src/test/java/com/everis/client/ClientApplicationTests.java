@@ -2,6 +2,7 @@ package com.everis.client;
 
 import com.everis.client.dao.entity.CreditCardPersonal;
 import com.everis.client.dao.entity.personal.ClientPersonal;
+import lombok.val;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.test.StepVerifier;
 
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
@@ -21,7 +23,7 @@ class ClientApplicationTests {
     public void testApplyVipToClientPersonal() {
         String dni = "12345678";
         try {
-            WebTestClient.bindToServer()
+            val result = WebTestClient.bindToServer()
                     .baseUrl("http://localhost:" + port)
                     .build()
                     .post()
@@ -29,7 +31,9 @@ class ClientApplicationTests {
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .exchange()
-                    .expectStatus().isOk();
+                    .expectStatus();
+
+            StepVerifier.create(s -> result.isOk());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -39,7 +43,7 @@ class ClientApplicationTests {
     public void testApplyPymeToClientEnterprise() {
         String ruc = "12345678";
         try {
-            WebTestClient.bindToServer()
+            val result = WebTestClient.bindToServer()
                     .baseUrl("http://localhost:" + port)
                     .build()
                     .post()
@@ -47,7 +51,10 @@ class ClientApplicationTests {
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .exchange()
-                    .expectStatus().isOk();
+                    .expectStatus();
+
+            StepVerifier.create(s -> result.isOk());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
