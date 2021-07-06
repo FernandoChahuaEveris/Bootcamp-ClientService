@@ -78,7 +78,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
     }
 
     @Override
-    @HystrixCommand(fallbackMethod = "findAllDefault")
+    @HystrixCommand(fallbackMethod = "findByIdDefault")
     public Mono<ClientPersonal> findById(UUID id) {
         log.info("idRequest " + id);
         return repository
@@ -86,6 +86,10 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
                 .switchIfEmpty(
                         Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se encontro registro"))
                 );
+    }
+
+    public Mono<ClientPersonal> findByIdDefault(UUID id, Throwable e){
+        return Mono.error(e);
     }
 
     @Override
