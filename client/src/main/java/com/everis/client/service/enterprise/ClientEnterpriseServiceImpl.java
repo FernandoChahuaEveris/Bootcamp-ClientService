@@ -1,14 +1,14 @@
 package com.everis.client.service.enterprise;
 
-import com.everis.client.dao.entity.CreditCard;
+import com.everis.client.dao.entity.CreditCardEnterprise;
+import com.everis.client.dao.entity.CreditCardPersonal;
 import com.everis.client.dao.entity.cusexceptions.NotFoundException;
 import com.everis.client.dao.entity.enterprise.ClientEnterprise;
 import com.everis.client.dao.entity.enterprise.EnterpriseError;
-import com.everis.client.dao.entity.personal.ClientPersonal;
-import com.everis.client.dao.entity.personal.PersonalError;
 import com.everis.client.dao.repository.enterprise.ClientEnterpriseRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -26,6 +26,8 @@ public class ClientEnterpriseServiceImpl implements ClientEnterpriseService<Clie
     ClientEnterpriseRepository<ClientEnterprise> repository;
     @Autowired
     WebClient.Builder builder;
+    @Value("${credit.hostname.uri}")
+    String creditUri;
 
     boolean isExist;
 
@@ -84,24 +86,25 @@ public class ClientEnterpriseServiceImpl implements ClientEnterpriseService<Clie
     public Mono<ClientEnterprise> assignClientPyme(String ruc) {
         boolean isValid = false;
 
-        Mono<ClientEnterprise> monoClient = findClientByRuc(ruc);
-        Mono<CreditCard> monoCreditCard = builder.build()
-                .get()
-                .uri("localhost:8085/creditcard/")
-                .retrieve()
-                .bodyToMono(CreditCard.class);
+        return findClientByRuc(ruc).flatMap(clientEnterprise -> {
 
-        monoCreditCard.doOnNext(creditCard -> {
-            System.out.println("Validar si es apto para crear perfil VIP");
+            Flux<CreditCardEnterprise> monoCreditCard = builder.build()
+                    .get()
+                    .uri(creditUri + "credits-loans/business-credit-card/ruc/" + ruc)
+                    .retrieve()
+                    .bodyToFlux(CreditCardEnterprise.class);
+
+            log.info("Obtener tarjeta de credito URI " + creditUri + "credits-loans/business-credit-card/ruc/" + ruc);
+            long cant = monoCreditCard.toStream().filter(creditCardEnterprise -> creditCardEnterprise.getBusinessClient().getRuc().equals(clientEnterprise.getRuc()))
+                    .count();
+
+            if (cant == 0) {
+                return Mono.error(new NotFoundException("No se encontro tarjeta de credito asociada"));
+            }
+            clientEnterprise.setProfile("PYME");
+
+            return Mono.just(clientEnterprise).flatMap(repository::save);
         });
-        monoClient.filter(clientEnterprise -> !ruc.equals(clientEnterprise.getRuc()))
-                .onErrorResume(throwable -> Mono.just(new EnterpriseError(HttpStatus.NOT_FOUND, "No se puede encontrar cliente")));
-
-        return repository.findById(monoClient.block().getIdClient())
-                .flatMap(clientEnterprise -> {
-                    clientEnterprise.setProfile("VIP");
-                    return repository.save(clientEnterprise);
-                });
     }
 
     @Override

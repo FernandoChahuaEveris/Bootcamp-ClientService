@@ -16,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreditCard {
+public class CreditCardPersonal {
     @Id
     private UUID idPersonalCreditCard;
     private ClientPersonal personalClient;

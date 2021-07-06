@@ -1,6 +1,6 @@
 package com.everis.client.service.personal;
 
-import com.everis.client.dao.entity.CreditCard;
+import com.everis.client.dao.entity.CreditCardPersonal;
 import com.everis.client.dao.entity.cusexceptions.NotFoundException;
 import com.everis.client.dao.entity.personal.ClientPersonal;
 import com.everis.client.dao.entity.personal.PersonalError;
@@ -109,14 +109,14 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
         return findClientByDni(dni).flatMap(clientPersonal -> {
 
-            Flux<CreditCard> monoCreditCard = builder.build()
+            Flux<CreditCardPersonal> monoCreditCard = builder.build()
                     .get()
                     .uri(creditUri +"credits-loans/personal-credit-card/dni/"+ dni)
                     .retrieve()
-                    .bodyToFlux(CreditCard.class);
+                    .bodyToFlux(CreditCardPersonal.class);
 
             log.info("Obtener tarjeta de credito URI " + creditUri +"credits-loans/personal-credit-card/dni/"+ dni);
-            long cant = monoCreditCard.toStream().filter(creditCard -> creditCard.getPersonalClient().getDni().equals(clientPersonal.getDni()))
+            long cant = monoCreditCard.toStream().filter(creditCardPersonal -> creditCardPersonal.getPersonalClient().getDni().equals(clientPersonal.getDni()))
                     .count();
             log.info("Cantidad " + cant);
 
@@ -127,9 +127,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
             clientPersonal.setProfile("VIP");
             log.info("Antes de guardar");
 
-            repository.save(clientPersonal);
-
-            return Mono.just(clientPersonal);
+            return Mono.just(clientPersonal).flatMap(repository::save);
         });
     }
 
