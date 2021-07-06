@@ -50,4 +50,10 @@ public class ClientEnterpriseController {
     public Mono<ResponseEntity> updateClient(@PathVariable("id") UUID id, @RequestBody ClientEnterprise clientEnterprise){
         return service.updateClient(id, clientEnterprise).map(ResponseEntity::ok);
     }
+
+    @PostMapping("/pyme/{ruc}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<ResponseEntity> assignPyme(@PathVariable("ruc")String ruc){
+        return service.assignClientPyme(ruc).map(ResponseEntity::ok);
+    }
 }

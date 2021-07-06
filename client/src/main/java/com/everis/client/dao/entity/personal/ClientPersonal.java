@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ClientPersonal extends DataResponse {
+
     @Id
     private UUID idClient;
     private String name;

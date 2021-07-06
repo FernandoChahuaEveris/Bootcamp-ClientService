@@ -87,7 +87,7 @@ public class ClientEnterpriseServiceImpl implements ClientEnterpriseService<Clie
         Mono<ClientEnterprise> monoClient = findClientByRuc(ruc);
         Mono<CreditCard> monoCreditCard = builder.build()
                 .get()
-                .uri("docker-credit-cards-service:8085/creditcard/")
+                .uri("localhost:8085/creditcard/")
                 .retrieve()
                 .bodyToMono(CreditCard.class);
 

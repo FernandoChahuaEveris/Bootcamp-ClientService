@@ -8,16 +8,15 @@ import com.everis.client.dao.repository.personal.ClientPersonalRepository;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 
 @Slf4j
 @Service
@@ -25,10 +24,13 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
     @Autowired
     ClientPersonalRepository<ClientPersonal> repository;
-    @Autowired
-    private WebClient.Builder builder;
 
-    private Mono<ClientPersonal> mono;
+    @Autowired
+    WebClient.Builder builder;
+
+    @Value("${credit.hostname.uri}")
+    String creditUri;
+
     boolean isExist;
 
 
@@ -42,6 +44,7 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
             clientPersonal.setIdClient(UUID.fromString(id));
             clientPersonal.setTypeClient("Personal");
             clientPersonal.setCreationDate(new Date());
+            clientPersonal.setProfile("");
             return repository.save(clientPersonal);
         }));
     }
@@ -103,26 +106,31 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
     @Override
     public Mono<ClientPersonal> assignClientVip(String dni) {
-        boolean isValid = false;
 
-        Mono<ClientPersonal> monoClient = findClientByDni(dni);
-        Mono<CreditCard> monoCreditCard = builder.build()
-                .get()
-                .uri("docker-credit-cards-service:8085/creditcard/")
-                .retrieve()
-                .bodyToMono(CreditCard.class);
+        return findClientByDni(dni).flatMap(clientPersonal -> {
 
-        monoCreditCard.doOnNext(creditCard -> {
-            System.out.println("Validar si es apto para crear perfil VIP");
+            Flux<CreditCard> monoCreditCard = builder.build()
+                    .get()
+                    .uri(creditUri +"credits-loans/personal-credit-card/dni/"+ dni)
+                    .retrieve()
+                    .bodyToFlux(CreditCard.class);
+
+            log.info("Obtener tarjeta de credito URI " + creditUri +"credits-loans/personal-credit-card/dni/"+ dni);
+            long cant = monoCreditCard.toStream().filter(creditCard -> creditCard.getPersonalClient().getDni().equals(clientPersonal.getDni()))
+                    .count();
+            log.info("Cantidad " + cant);
+
+            if(cant == 0){
+               return Mono.error(new NotFoundException("No se encontro tarjeta de credito asociada"));
+               //return null;
+            }
+            clientPersonal.setProfile("VIP");
+            log.info("Antes de guardar");
+
+            repository.save(clientPersonal);
+
+            return Mono.just(clientPersonal);
         });
-        monoClient.filter(clientPersonal -> !dni.equals(clientPersonal.getDni()))
-                .onErrorResume(throwable -> Mono.just(new PersonalError(HttpStatus.NOT_FOUND, "No se puede encontrar cliente")));
-
-        return repository.findById(monoClient.block().getIdClient())
-                .flatMap(clientPersonal -> {
-                    clientPersonal.setProfile("VIP");
-                    return repository.save(clientPersonal);
-                });
     }
 
 }
