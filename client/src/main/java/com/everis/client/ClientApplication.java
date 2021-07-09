@@ -3,6 +3,7 @@ package com.everis.client;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
@@ -18,7 +19,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class ClientApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ClientApplication.class, args);
+		SpringApplication application = new SpringApplication(ClientApplication.class);
+		application.setBannerMode(Banner.Mode.OFF);
+		application.run(args);
 	}
 
 	@Bean

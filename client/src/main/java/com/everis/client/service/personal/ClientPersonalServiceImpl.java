@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -30,6 +31,9 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
     @Value("${credit.hostname.uri}")
     String creditUri;
+
+    private KafkaTemplate<CreditCardPersonal, String> kafkaTemplate;
+    private static String TOPIC_CREDIT_CARD = "CreditCardPersonal";
 
     boolean isExist;
 
@@ -113,6 +117,8 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
         return findClientByDni(dni).flatMap(clientPersonal -> {
 
+            producerCreditCardPersonal(dni);
+
             Flux<CreditCardPersonal> monoCreditCard = builder.build()
                     .get()
                     .uri(creditUri +"credits-loans/personal-credit-card/dni/"+ dni)
@@ -133,6 +139,11 @@ public class ClientPersonalServiceImpl implements ClientPersonalService<ClientPe
 
             return Mono.just(clientPersonal).flatMap(repository::save);
         });
+    }
+
+    public void producerCreditCardPersonal(String message){
+        log.info("message " + message);
+        this.kafkaTemplate.send(TOPIC_CREDIT_CARD, message);
     }
 
 }
